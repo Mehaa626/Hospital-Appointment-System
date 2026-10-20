@@ -1,0 +1,49 @@
+
+{
+  "doctors": [
+    {
+      "id": "101",
+      "name": "Dr. Priya Sharma",
+      "specialty": "Cardiology",
+      "experience": 10,
+      "fee": 800,
+      "description": "Heart specialist"
+    },
+    {
+      "id": "102",
+      "name": "Dr. Arun Kumar",
+      "specialty": "Neurology",
+      "experience": 8,
+      "fee": 700,
+      "description": "Brain specialist"
+    },
+    {
+      "id": "103",
+      "name": "Dr. Meena Raj",
+      "specialty": "Dermatology",
+      "experience": 7,
+      "fee": 600,
+      "description": "Skin specialist"
+    }
+  ],
+  "availability": [
+    {
+      "id": "1",
+      "doctorId": "101",
+      "date": "2027-11-15",
+      "slots": ["09:00 AM", "10:00 AM", "02:00 PM"]
+    },
+    {
+      "id": "2",
+      "doctorId": "102",
+      "date": "2027-11-15",
+      "slots": ["10:00 AM", "11:30 AM", "03:00 PM"]
+    },
+    {
+      "id": "3",
+      "doctorId": "103",
+      "date": "2027-11-16",
+      "slots": ["09:30 AM", "01:00 PM", "04:00 PM"]
+    }
+  ]
+}

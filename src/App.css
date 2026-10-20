@@ -1,0 +1,44 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eaf7f1;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.card {
+  width: 100%;
+  max-width: 650px;
+  padding: 35px;
+  background: white;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px #c6dfd3;
+}
+
+h1 {
+  color: #176b55;
+}
+
+h2 {
+  color: #176b55;
+}
+
+.error {
+  color: #d32f2f;
+}
+
+p {
+  color: #555;
+}
