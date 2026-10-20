@@ -1,86 +1,99 @@
 
-const doctors = [
-  { id: "101", name: "Dr. Priya Sharma", specialty: "Cardiology" },
-  { id: "102", name: "Dr. Arun Kumar", specialty: "Neurology" },
-  { id: "103", name: "Dr. Meena Raj", specialty: "Dermatology" }
-];
+let token = null;
 
-let appointments = [];
-let nextId = 1;
+const appointments = [];
 
-export async function getDoctors() {
-  console.log("➡️ REQUEST: GET /api/doctors");
-  console.log("⬅️ RESPONSE: 200 OK", doctors);
-  return doctors;
-}
+const demoUser = {
+  email: "patient@gmail.com",
+  password: "123456"
+};
 
+// Login API (demo)
 export async function login(email, password) {
-  console.log("➡️ REQUEST: POST /api/login", { email });
-
-  if (email !== "patient@gmail.com" || password !== "123456") {
+  if (email !== demoUser.email || password !== demoUser.password) {
     throw new Error("Invalid email or password");
   }
 
-  localStorage.setItem("authToken", "demo-token");
-  console.log("⬅️ RESPONSE: 200 OK — Login successful");
-  return { token: "demo-token" };
+  token = "demo-token-" + Date.now();
+  localStorage.setItem("authToken", token);
+
+  console.log("Login successful");
+  console.log("Token stored:", Boolean(token));
+
+  return { email, token };
 }
 
-export function logout() {
-  localStorage.removeItem("authToken");
-  console.log("➡️ LOGOUT: Token removed");
+// Get token
+export function getToken() {
+  return localStorage.getItem("authToken");
 }
 
-export async function getHistory() {
-  console.log("➡️ REQUEST: GET /api/appointments");
+// Protect API requests
+function checkAuth() {
+  const savedToken = getToken();
 
-  if (!localStorage.getItem("authToken")) {
-    throw new Error("Please login first");
+  if (!savedToken || !savedToken.startsWith("demo-token-")) {
+    localStorage.removeItem("authToken");
+    token = null;
+    throw new Error("Unauthorized. Please login again.");
   }
 
-  console.log("⬅️ RESPONSE: 200 OK", appointments);
+  return savedToken;
+}
+
+// Protected: GET appointment history
+export async function getHistory() {
+  checkAuth();
+  console.log("GET /appointments - Authorized");
   return [...appointments];
 }
 
+// Protected: POST appointment
 export async function bookAppointment(data) {
-  console.log("➡️ REQUEST: POST /api/appointments", data);
+  checkAuth();
 
-  if (!localStorage.getItem("authToken")) {
-    throw new Error("Please login first");
-  }
-
-  const appointment = {
-    id: nextId++,
+  const newAppointment = {
+    id: Date.now(),
     ...data,
     status: "Booked"
   };
 
-  appointments.push(appointment);
-  console.log("⬅️ RESPONSE: 201 Created", appointment);
-  return appointment;
+  appointments.push(newAppointment);
+  console.log("POST /appointments - Authorized");
+
+  return newAppointment;
 }
 
+// Protected: PATCH appointment
 export async function rescheduleAppointment(id, date) {
-  console.log("➡️ REQUEST: PUT /api/appointments/" + id, { date });
+  checkAuth();
 
-  const appointment = appointments.find(
-    (item) => item.id === id
-  );
+  const appointment = appointments.find((a) => a.id === id);
 
   if (!appointment) throw new Error("Appointment not found");
 
   appointment.date = date;
-  console.log("⬅️ RESPONSE: 200 OK", appointment);
-  return { ...appointment };
+  appointment.status = "Rescheduled";
+
+  console.log("PATCH /appointments - Authorized");
+  return appointment;
 }
 
+// Protected: DELETE appointment
 export async function cancelAppointment(id) {
-  console.log("➡️ REQUEST: DELETE /api/appointments/" + id);
+  checkAuth();
 
-  appointments = appointments.filter(
-    (item) => item.id !== id
-  );
+  const index = appointments.findIndex((a) => a.id === id);
 
-  console.log("⬅️ RESPONSE: 200 OK — Appointment cancelled");
-  return { success: true };
+  if (index === -1) throw new Error("Appointment not found");
+
+  appointments.splice(index, 1);
+  console.log("DELETE /appointments - Authorized");
+}
+
+// Logout
+export function logout() {
+  localStorage.removeItem("authToken");
+  token = null;
+  console.log("Logged out. Token removed.");
 }

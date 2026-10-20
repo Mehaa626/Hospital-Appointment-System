@@ -1,43 +1,30 @@
 
-import { useState, useEffect } from "react";
-import "./App.css";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-function App() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+const Authentication = lazy(
+  () => import("./components/Authentication")
+);
+const DoctorDetails = lazy(
+  () => import("./pages/DoctorDetails")
+);
+const AppointmentsPage = lazy(
+  () => import("./pages/AppointmentsPage")
+);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setError(true);
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="page">
-        <div className="card">
-          <h2>Loading doctors...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="page">
-        <div className="card">
-          <h1>Hospital Appointment System</h1>
-          <h2 className="error">Error loading doctors!</h2>
-          <p>Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<p>Loading page...</p>}>
+        <Routes>
+          <Route path="/" element={<Authentication />} />
+          <Route path="/doctor/:id" element={<DoctorDetails />} />
+          <Route path="/appointment/:id" element={<AppointmentsPage />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
 }
 
-export default App;
+

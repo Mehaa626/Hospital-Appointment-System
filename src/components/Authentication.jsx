@@ -1,54 +1,25 @@
 
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import {
   login,
   logout,
-  getDoctors,
   getHistory,
   bookAppointment,
   rescheduleAppointment,
   cancelAppointment
 } from "../services/authApi";
 
-import {
-  setAppointments,
-  addAppointment,
-  updateAppointment,
-  removeAppointment
-} from "../store/appointmentSlice";
-
 export default function Authentication() {
-  const dispatch = useDispatch();
-  const appointments = useSelector(
-    (state) => state.appointments
-  );
-
   const [email, setEmail] = useState("patient@gmail.com");
   const [password, setPassword] = useState("123456");
   const [loggedIn, setLoggedIn] = useState(
     Boolean(localStorage.getItem("authToken"))
   );
-  const [doctors, setDoctors] = useState([]);
-  const [doctorId, setDoctorId] = useState("101");
-  const [date, setDate] = useState("2027-11-15");
+  const [history, setHistory] = useState([]);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    getDoctors()
-      .then(setDoctors)
-      .catch(() => setMessage("Unable to load doctors."));
-  }, []);
-
-  useEffect(() => {
-    if (loggedIn) {
-      loadHistory();
-    }
-  }, [loggedIn]);
 
   async function handleLogin(e) {
     e.preventDefault();
-
     try {
       await login(email, password);
       setLoggedIn(true);
@@ -60,68 +31,46 @@ export default function Authentication() {
 
   async function loadHistory() {
     try {
-      const data = await getHistory();
-      dispatch(setAppointments(data));
+      setHistory(await getHistory());
       setMessage("Appointment history loaded.");
     } catch (error) {
-      logout();
+      setMessage(error.message);
       setLoggedIn(false);
-      dispatch(setAppointments([]));
-      setMessage(error.message);
     }
   }
 
-  async function handleBook(e) {
-    e.preventDefault();
-
+  async function book() {
     try {
-      const doctor = doctors.find(
-        (d) => d.id === doctorId
-      );
-
-      const appointment = await bookAppointment({
+      await bookAppointment({
         patient: email,
-        doctorId,
-        doctorName: doctor?.name || "Doctor",
-        date
+        doctor: "Dr. Priya Sharma",
+        date: "2027-11-15"
       });
-
-      dispatch(addAppointment(appointment));
-      setMessage("Appointment booked successfully!");
+      setMessage("Appointment booked!");
+      await loadHistory();
     } catch (error) {
       setMessage(error.message);
     }
   }
 
-  async function handleReschedule(id) {
-    const newDate = window.prompt(
-      "Enter new date (YYYY-MM-DD):",
-      "2027-11-20"
-    );
-
-    if (!newDate) return;
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
-      setMessage("Enter date in YYYY-MM-DD format.");
-      return;
-    }
+  async function reschedule(id) {
+    const date = window.prompt("Enter new date (YYYY-MM-DD):");
+    if (!date) return;
 
     try {
-      const updated = await rescheduleAppointment(id, newDate);
-      dispatch(updateAppointment(updated));
+      await rescheduleAppointment(id, date);
       setMessage("Appointment rescheduled!");
+      await loadHistory();
     } catch (error) {
       setMessage(error.message);
     }
   }
 
-  async function handleCancel(id) {
-    if (!window.confirm("Cancel this appointment?")) return;
-
+  async function cancel(id) {
     try {
       await cancelAppointment(id);
-      dispatch(removeAppointment(id));
       setMessage("Appointment cancelled!");
+      await loadHistory();
     } catch (error) {
       setMessage(error.message);
     }
@@ -129,121 +78,62 @@ export default function Authentication() {
 
   function handleLogout() {
     logout();
-    dispatch(setAppointments([]));
     setLoggedIn(false);
-    setMessage("Logged out successfully.");
+    setHistory([]);
+    setMessage("You have logged out.");
   }
 
   return (
-    <main className="container">
-      <header className="header">
-        <h1>CareNest Hospital</h1>
-        <p>Smart Hospital Appointment Booking</p>
-      </header>
+    <div className="auth-container">
+      <h1>CareNest Patient Login</h1>
 
       {!loggedIn ? (
-        <section className="panel">
-          <h2>Patient Login</h2>
+        <form onSubmit={handleLogin}>
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <form onSubmit={handleLogin}>
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <button type="submit">Login</button>
-          </form>
-
-          <p className="hint">
-            Demo: patient@gmail.com / 123456
-          </p>
-        </section>
+          <button type="submit">Login</button>
+          <p>Demo: patient@gmail.com / 123456</p>
+        </form>
       ) : (
         <>
-          <section className="panel">
-            <div className="welcome">
-              <h2>Welcome, Patient!</h2>
-              <button className="logout" onClick={handleLogout}>
-                Logout
+          <h2>Welcome, Patient!</h2>
+          <button onClick={book}>Book Appointment</button>
+          <button onClick={loadHistory}>View History</button>
+          <button onClick={handleLogout}>Logout</button>
+
+          <h2>Appointment History</h2>
+
+          {history.map((a) => (
+            <div className="auth-card" key={a.id}>
+              <p>Doctor: {a.doctor}</p>
+              <p>Date: {a.date}</p>
+              <p>Status: {a.status}</p>
+              <button onClick={() => reschedule(a.id)}>
+                Reschedule
+              </button>
+              <button onClick={() => cancel(a.id)}>
+                Cancel
               </button>
             </div>
-
-            <h3>Book Appointment</h3>
-
-            <form onSubmit={handleBook}>
-              <label>Select Doctor</label>
-              <select
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-              >
-                {doctors.map((doctor) => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} - {doctor.specialty}
-                  </option>
-                ))}
-              </select>
-
-              <label>Appointment Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-
-              <button type="submit">Book Appointment</button>
-            </form>
-          </section>
-
-          <section className="panel">
-            <div className="welcome">
-              <h2>Appointment History</h2>
-              <button className="secondary" onClick={loadHistory}>
-                Refresh
-              </button>
-            </div>
-
-            {appointments.length === 0 ? (
-              <p>No appointments yet.</p>
-            ) : (
-              appointments.map((item) => (
-                <article className="appointment" key={item.id}>
-                  <h3>{item.doctorName}</h3>
-                  <p>Date: {item.date}</p>
-                  <p>Status: {item.status}</p>
-
-                  <button
-                    className="secondary"
-                    onClick={() => handleReschedule(item.id)}
-                  >
-                    Reschedule
-                  </button>
-
-                  <button
-                    className="danger"
-                    onClick={() => handleCancel(item.id)}
-                  >
-                    Cancel
-                  </button>
-                </article>
-              ))
-            )}
-          </section>
+          ))}
         </>
       )}
 
-      {message && <p className="message">{message}</p>}
-    </main>
+      {message && <p>{message}</p>}
+    </div>
   );
 }
