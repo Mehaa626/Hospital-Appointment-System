@@ -14,7 +14,7 @@ const AppointmentsPage = lazy(
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Hospital-Appointment-System">
       <Suspense fallback={<p>Loading page...</p>}>
         <Routes>
           <Route path="/" element={<Authentication />} />

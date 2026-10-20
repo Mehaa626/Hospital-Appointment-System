@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Hospital Appointment System",
+        name: "Hospital-Appointment-System",
         short_name: "MediCare",
         description: "Book and manage hospital appointments",
         theme_color: "#2563eb",
